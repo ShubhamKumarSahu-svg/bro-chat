@@ -86,7 +86,7 @@ export const sendMessage = async (req, res) => {
       image: imageUrl,
     });
 
-    console.log('New message to save:', newMessage);
+    // console.log('New message to save:', newMessage);
 
     await newMessage.save();
 
