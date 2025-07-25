@@ -1,7 +1,7 @@
 import cloudinary from '../lib/cloudinary.js';
+import { redis } from '../lib/redis.js';
 import { comparePassword, generateToken, hashPassword } from '../lib/utils.js';
 import User from '../models/user.model.js';
-
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
   try {
@@ -49,12 +49,31 @@ export const signup = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
+
   try {
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: 'All credentials are must to continue!' });
+      return res.status(400).json({
+        message: 'All credentials are required to continue!',
+      });
     }
+
+    const ip =
+      req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+    const key = `login_attempts:${email}:${ip}`;
+
+    const attempts = await redis.incr(key);
+
+    if (attempts === 1) {
+      // Set expiry only on first attempt
+      await redis.expire(key, 15 * 60); // 15 minutes
+    }
+    if (attempts > 5) {
+      return res.status(429).json({
+        message: 'Too many login attempts. Please try again later.',
+      });
+    }
+
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -67,17 +86,20 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
+    // Success: reset the login attempts for this IP+email
+    await redis.del(key);
+
     generateToken(user._id, res);
 
-    res.status(200).json({
+    return res.status(200).json({
       _id: user._id,
       fullName: user.fullName,
       email: user.email,
       profilePic: user.profilePic,
     });
   } catch (err) {
-    console.log('Error in login controller ', err.message);
-    res.status(500).json({ message: 'Internal Server Error' });
+    console.error('Login error:', err.message);
+    return res.status(500).json({ message: 'Internal Server Error' });
   }
 };
 

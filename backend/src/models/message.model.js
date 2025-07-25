@@ -18,6 +18,13 @@ const messageSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+    },
+    deletedAt: {
+      type: Date,
+    },
   },
   { timestamps: true }
 );
