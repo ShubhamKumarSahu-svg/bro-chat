@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
+import HomeChatPage from './pages/HomeChatPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import LogInPage from './pages/LogInPage.jsx';
 import ProfilePage from './pages/ProfilePage.jsx';
@@ -31,7 +32,14 @@ const App = () => {
     <div data-theme={theme}>
       <Navbar />
       <Routes>
-        <Route path="/" element={authUser ? <HomePage /> : <LogInPage />} />
+        <Route
+          path="/"
+          element={authUser ? <HomePage /> : <Navigate to={'/login'} />}
+        />
+        <Route
+          path="/chat"
+          element={authUser ? <HomeChatPage /> : <LogInPage />}
+        />
         <Route
           path="/signup"
           element={!authUser ? <SignUpPage /> : <Navigate to={'/'} />}

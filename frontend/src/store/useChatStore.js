@@ -34,14 +34,37 @@ export const useChatStore = create((set, get) => ({
     }
   },
 
-  sendMessage: async (messageData) => {
+  sendMessage: async (formData) => {
     const { selectedUser, messages } = get();
     try {
       const res = await axiosInstance.post(
         `/messages/send/${selectedUser._id}`,
-        messageData
+        formData,
+        {
+          withCredentials: true,
+        }
       );
       set({ messages: [...messages, res.data] });
+    } catch (error) {
+      toast.error(error.response.data.message);
+    }
+  },
+
+  deleteMessage: async (messageId) => {
+    try {
+      const res = await axiosInstance.delete(`/messages/delete/${messageId}`, {
+        withCredentials: true,
+      });
+      if (res.data.success) {
+        set((state) => ({
+          messages: state.messages.map((msg) =>
+            msg._id === messageId ? { ...msg, isDeleted: true } : msg
+          ),
+        }));
+        toast.success('Message deleted successfully');
+      } else {
+        toast.error(res.data.message);
+      }
     } catch (error) {
       toast.error(error.response.data.message);
     }
@@ -68,6 +91,6 @@ export const useChatStore = create((set, get) => ({
     const socket = useAuthStore.getState().socket;
     socket.off('newMessage');
   },
-  
+
   setSelectedUser: (selectedUser) => set({ selectedUser }),
 }));

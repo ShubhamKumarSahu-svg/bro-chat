@@ -8,17 +8,19 @@ const MessageInput = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const { sendMessage } = useChatStore();
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isSending, setIsSending] = useState(false);
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (!file.type.startsWith('image/')) {
+    if (!file.type?.startsWith('image/')) {
       toast.error('Please select an image file');
       return;
     }
-
+    setSelectedImage(file);
     const reader = new FileReader();
     reader.onloadend = () => {
-      setImagePreview(reader.result);
+      setImagePreview(reader.result); //for preview only
     };
     reader.readAsDataURL(file);
   };
@@ -32,18 +34,24 @@ const MessageInput = () => {
     e.preventDefault();
     if (!text.trim() && !imagePreview) return;
 
-    try {
-      await sendMessage({
-        text: text.trim(),
-        image: imagePreview,
-      });
+    const formData = new FormData();
+    formData.append('text', text.trim());
+    if (selectedImage) {
+      formData.append('image', selectedImage);
+    }
 
+    try {
+      setIsSending(true);
+      await sendMessage(formData);
       // Clear form
       setText('');
       setImagePreview(null);
+      setSelectedImage(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error) {
       console.error('Failed to send message:', error);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -76,6 +84,7 @@ const MessageInput = () => {
             placeholder="Type a message..."
             value={text}
             onChange={(e) => setText(e.target.value)}
+            disabled={isSending}
           />
           <input
             type="file"
@@ -83,6 +92,7 @@ const MessageInput = () => {
             className="hidden"
             ref={fileInputRef}
             onChange={handleImageChange}
+            disabled={isSending}
           />
 
           <button
@@ -90,6 +100,7 @@ const MessageInput = () => {
             className={`hidden sm:flex btn btn-circle
                      ${imagePreview ? 'text-emerald-500' : 'text-zinc-400'}`}
             onClick={() => fileInputRef.current?.click()}
+            disabled={isSending}
           >
             <Image size={20} />
           </button>
@@ -97,9 +108,13 @@ const MessageInput = () => {
         <button
           type="submit"
           className="btn btn-sm btn-circle"
-          disabled={!text.trim() && !imagePreview}
+          disabled={isSending || (!text.trim() && !imagePreview)}
         >
-          <Send size={22} />
+          {isSending ? (
+            <span className="loading loading-spinner loading-sm"></span>
+          ) : (
+            <Send size={22} />
+          )}
         </button>
       </form>
     </div>
