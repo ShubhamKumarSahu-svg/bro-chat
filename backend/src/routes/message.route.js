@@ -5,7 +5,7 @@ import {
   getUsersForSidebar,
   sendMessage,
 } from '../controllers/message.controller.js';
-import { upload } from '../lib/mutler.js';
+import { upload } from '../lib/multer.js';
 import { protectRoute } from '../middleware/auth.middleware.js';
 import { isRateLimited } from '../middleware/messageRateLimiter.js';
 

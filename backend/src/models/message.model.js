@@ -16,7 +16,8 @@ const messageSchema = new mongoose.Schema(
       type: String,
     },
     image: {
-      type: String,
+      public_id: { type: String, default: '' },
+      secure_url: { type: String, default: '' },
     },
     isDeleted: {
       type: Boolean,

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
-import { streamUpload } from '../lib/mutler.js';
+import { deleteImage } from '../lib/cloudinary.js';
+import { streamUpload } from '../lib/multer.js';
 import { redis } from '../lib/redis.js';
 import { getReceiverSocketId, io } from '../lib/socket.js';
 import Message from '../models/message.model.js';
@@ -76,7 +77,10 @@ export const sendMessage = async (req, res) => {
         resource_type: 'image',
         folder: 'bro-chat/messages',
       });
-      imageUrl = result.secure_url;
+      imageUrl = {
+        public_id: result.public_id,
+        secure_url: result.secure_url,
+      };
     }
 
     const newMessage = new Message({
@@ -112,7 +116,9 @@ export const deleteMessage = async (req, res) => {
     if (!message || message.senderId.toString() !== userId.toString()) {
       return res.status(404).json({ error: 'Message not found' });
     }
-
+    if (message.image?.public_id) {
+      await deleteImage(message.image.public_id);
+    }
     message.isDeleted = true;
     message.deletedAt = new Date();
     await message.save();

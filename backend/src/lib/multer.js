@@ -15,7 +15,7 @@ export const streamUpload = (buffer, options) => {
         if (error) {
           return reject(error);
         }
-        resolve(result);
+        resolve({ secure_url: result.secure_url, publicId: result.public_id });
       }
     );
     stream.end(buffer);

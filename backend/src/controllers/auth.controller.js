@@ -1,7 +1,12 @@
-import cloudinary from '../lib/cloudinary.js';
+import { deleteImage } from '../lib/cloudinary.js';
+import { streamUpload } from '../lib/multer.js';
+
 import { redis } from '../lib/redis.js';
 import { comparePassword, generateToken, hashPassword } from '../lib/utils.js';
+import GlobalMessage from '../models/globalMessages.model.js';
+import Message from '../models/message.model.js';
 import User from '../models/user.model.js';
+
 export const signup = async (req, res) => {
   const { fullName, email, password } = req.body;
   try {
@@ -27,7 +32,12 @@ export const signup = async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
+      profilePic: {
+        public_id: '',
+        secure_url: '',
+      },
     });
+    await newUser.save();
 
     if (newUser) {
       generateToken(newUser._id, res);
@@ -117,28 +127,37 @@ export const logout = (req, res) => {
 
 export const updateProfile = async (req, res) => {
   try {
-    const { profilePic } = req.body;
     const userId = req.user._id;
 
-    if (!profilePic) {
-      res.status(400).json({ message: 'Profile pic is required' });
+    if (!req.file) {
+      return res.status(404).json({ message: 'Profile image is required' });
     }
 
-    const uploadResponse = await cloudinary.uploader.upload(profilePic);
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      {
-        profilePic: uploadResponse.secure_url,
-      },
-      { new: true }
-    );
+    if (user.profilePic?.public_id) {
+      await deleteImage(user.profilePic.public_id);
+    }
+
+    const result = await streamUpload(req.file.buffer, {
+      resource_type: 'image',
+      folder: 'bro-chat/avatars',
+    });
+
+    user.profilePic = {
+      public_id: result.public_id,
+      secure_url: result.secure_url,
+    };
+    await user.save();
 
     res.status(200).json({
-      _id: updatedUser._id,
-      fullName: updatedUser.fullName,
-      email: updatedUser.email,
-      profilePic: updatedUser.profilePic,
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      profilePic: user.profilePic,
     });
   } catch (err) {
     console.log('Error in updateProfile controller ', err.message);
@@ -148,9 +167,50 @@ export const updateProfile = async (req, res) => {
 
 export const checkAuth = (req, res) => {
   try {
-    res.status(200).json(req.user);
+    res.status(200).json({
+      _id: req.user._id,
+      fullName: req.user.fullName,
+      email: req.user.email,
+      profilePic: req.user.profilePic,
+      createdAt: req.user.createdAt,
+    });
   } catch (error) {
     console.log('Error in checkAuth controller', error.message);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+export const deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.profilePic?.public_id) {
+      await deleteImage(user.profilePic.public_id);
+    }
+
+    const messageWithImages = await Message.find({
+      senderId: userId,
+      'image.public_id': { $exists: true, $ne: '' },
+    });
+
+    for (const msg of messageWithImages) {
+      await deleteImage(msg.image.public_id);
+    }
+
+    await GlobalMessage.deleteMany({ senderId: userId });
+
+    await Message.deleteMany({
+      $or: [{ senderId: userId }, { receiverId: userId }],
+    });
+    await User.findByIdAndDelete(userId);
+    res.clearCookie('jwt');
+    res.status(200).json({ message: 'Account deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting account:', error.message);
     res.status(500).json({ message: 'Internal Server Error' });
   }
 };
