@@ -4,45 +4,70 @@ import Footer from '../components/Footer';
 const HomePage = () => {
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-300 flex items-center justify-center px-4 py-12">
-        <div className="text-center max-w-3xl space-y-10">
-          {/* Header */}
-          <div className="space-y-4">
-            <h1 className="text-6xl sm:text-7xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary drop-shadow-md">
-              Bro Chat
-            </h1>
-            <p className="text-lg sm:text-xl text-base-content/80">
-              Connect with friends and strangers across the world. Private,
-              secure, and instant. Easy signups — just start chatting.
-            </p>
-          </div>
+      <div className="min-h-screen bg-base-100 flex flex-col items-center justify-center px-6 py-16 transition-colors">
+        {/* Logo and tagline */}
+        <div className="max-w-lg w-full mx-auto text-center">
+          <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-base-content leading-tight mb-6 select-none">
+            Bro<span className="text-primary">Chat</span>
+          </h1>
+          <p className="text-base sm:text-lg text-base-content/70 font-medium mb-10">
+            Simple. Secure. Seamless. Connect privately or with the world,
+            elegantly.
+          </p>
+        </div>
 
-          {/* Primary Actions */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-xl mx-auto mt-6">
-            <Link to="/chat" className="btn btn-sm btn-primary shadow-md">
-              Start Chatting
-            </Link>
-            <Link
-              to="/global-chat"
-              className="btn btn-sm btn-secondary shadow-md"
-            >
-              Global Chat
-            </Link>
-            <Link to="/profile" className="btn btn-sm btn-accent shadow-md">
-              Your Profile
-            </Link>
-            <Link to="/settings" className="btn btn-sm btn-outline shadow-md">
-              Settings
-            </Link>
-          </div>
+        {/* Feature cards grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl w-full mb-10">
+          <Link to="/chat" className="group focus:outline-none">
+            <div className="bg-base-200 border border-base-300 rounded-xl shadow hover:shadow-lg transition-all py-7 px-7 flex flex-col items-center text-center hover:border-primary focus-visible:ring-2 focus-visible:ring-primary">
+              <span className="text-2xl font-bold text-primary mb-2">
+                Start Chat
+              </span>
+              <span className="text-sm text-base-content/60">
+                Direct & private messaging
+              </span>
+            </div>
+          </Link>
+          <Link to="/global-chat" className="group focus:outline-none">
+            <div className="bg-base-200 border border-base-300 rounded-xl shadow hover:shadow-lg transition-all py-7 px-7 flex flex-col items-center text-center hover:border-primary focus-visible:ring-2 focus-visible:ring-primary">
+              <span className="text-2xl font-bold text-primary mb-2">
+                Global Chat
+              </span>
+              <span className="text-sm text-base-content/60">
+                Public lounge, live conversations
+              </span>
+            </div>
+          </Link>
+          <Link to="/profile" className="group focus:outline-none">
+            <div className="bg-base-200 border border-base-300 rounded-xl shadow hover:shadow-lg transition-all py-7 px-7 flex flex-col items-center text-center hover:border-primary focus-visible:ring-2 focus-visible:ring-primary">
+              <span className="text-2xl font-bold text-primary mb-2">
+                Your Profile
+              </span>
+              <span className="text-sm text-base-content/60">
+                Personal info and customization
+              </span>
+            </div>
+          </Link>
+          <Link to="/settings" className="group focus:outline-none">
+            <div className="bg-base-200 border border-base-300 rounded-xl shadow hover:shadow-lg transition-all py-7 px-7 flex flex-col items-center text-center hover:border-primary focus-visible:ring-2 focus-visible:ring-primary">
+              <span className="text-2xl font-bold text-primary mb-2">
+                Settings
+              </span>
+              <span className="text-sm text-base-content/60">
+                Privacy, notification, themes
+              </span>
+            </div>
+          </Link>
+        </div>
 
-          {/* Footnote */}
-          <div className="pt-8">
-            <p className="text-sm text-base-content/60 italic">
-              Built with ❤️ using DaisyUI & Tailwind CSS — Your privacy is our
-              priority.
-            </p>
-          </div>
+        <div className="max-w-lg mx-auto">
+          <p className="text-xs text-base-content/50 text-center">
+            Crafted with precision, <span className="text-error">♥</span>, and
+            modern UX patterns.
+            <br />
+            Clean design, frictionless experience—no distractions, just
+            conversation.
+          </p>
         </div>
       </div>
       <Footer />

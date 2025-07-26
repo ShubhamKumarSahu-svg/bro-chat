@@ -13,11 +13,8 @@ const Footer = () => {
         >
           GitHub
         </a>
-        <a href="/privacy" className="link link-hover">
-          Privacy
-        </a>
-        <a href="/terms" className="link link-hover">
-          Terms
+        <a href="/about-me" className="link link-hover">
+          About Me
         </a>
       </div>
     </footer>

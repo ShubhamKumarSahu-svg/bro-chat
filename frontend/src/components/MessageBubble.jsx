@@ -1,18 +1,30 @@
 import { useState } from 'react';
 import { FaTrash } from 'react-icons/fa';
 import { formatMessageTime } from '../lib/utils';
-const MessageBubble = ({ message, onDelete, isOwnMessage, profilePic }) => {
-  const [hovered, setHovered] = useState(false);
+
+const MessageBubble = ({
+  message,
+  onDelete,
+  isOwnMessage = false,
+  profilePic,
+  isGlobal = false,
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const avatarUrl =
+    profilePic?.secure_url ||
+    message.senderId?.profilePic?.secure_url ||
+    '/avatar.png';
 
   if (message.isDeleted) {
     return (
       <div
-        className={`chat ${isOwnMessage ? 'chat-end' : 'chat-start'}`}
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        className={`flex items-end gap-2 ${
+          isOwnMessage ? 'justify-end' : 'justify-start'
+        }`}
       >
-        <div className="chat-bubble bg-gray-300 text-sm italic text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-          message was deleted
+        <div className="chat-bubble chat-bubble-secondary text-xs italic opacity-70">
+          This message was deleted
         </div>
       </div>
     );
@@ -20,40 +32,98 @@ const MessageBubble = ({ message, onDelete, isOwnMessage, profilePic }) => {
 
   return (
     <div
-      className={`chat ${isOwnMessage ? 'chat-end' : 'chat-start'} relative`}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      className={`flex items-end mb-3 ${
+        isOwnMessage ? 'justify-end' : 'justify-start'
+      }`}
     >
-      <div className="chat-image avatar">
-        <div className="size-10 rounded-full border">
-          <img src={profilePic || '/avatar.png'} alt="profile pic" />
+      {/* Avatar outside the bubble */}
+      {!isOwnMessage && (
+        <div className="mr-2 flex flex-col items-end">
+          <img
+            src={avatarUrl}
+            alt="User avatar"
+            className="w-9 h-9 rounded-full border border-gray-200 shadow object-cover"
+            loading="lazy"
+          />
+        </div>
+      )}
+
+      <div
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`flex flex-col max-w-[60%] relative ${
+          isOwnMessage ? 'items-end' : 'items-start'
+        }`}
+      >
+        {/* Name on hover */}
+        {((isGlobal && !isOwnMessage) || (!isGlobal && !isOwnMessage)) &&
+          isHovered && (
+            <div className="absolute -top-5 left-3 bg-gray-900 text-white text-xs rounded-full px-3 py-1 shadow z-20 pointer-events-none select-none transition-opacity duration-200">
+              {message.senderId?.fullName || 'Unknown'}
+            </div>
+          )}
+
+        {/* Timestamp */}
+        <div
+          className={`text-xs opacity-60 mt-1 ${
+            isOwnMessage ? 'text-right self-end' : 'text-left'
+          }`}
+        >
+          <time>{formatMessageTime(message.createdAt)}</time>
+        </div>
+
+        {/* Bubble */}
+        <div
+          className={`relative flex flex-col px-4 py-2 rounded-2xl shadow-md min-h-[40px]
+            ${
+              isOwnMessage
+                ? 'bg-primary text-white self-end ml-2'
+                : 'bg-gray-100 text-gray-900 self-start mr-2'
+            }
+            transition-all duration-150
+          `}
+        >
+          {message.image && (
+            <div className="flex justify-center mb-1">
+              <img
+                src={message.image.secure_url || message.image}
+                alt="Attachment"
+                className="rounded-md shadow max-w-[180px] max-h-[160px] object-cover"
+                loading="lazy"
+              />
+            </div>
+          )}
+
+          {message.text && (
+            <p className="whitespace-pre-wrap text-sm leading-relaxed mb-1">
+              {message.text}
+            </p>
+          )}
+
+          {!isGlobal && isOwnMessage && isHovered && (
+            <button
+              type="button"
+              aria-label="Delete message"
+              className="absolute -top-4 -right-4 bg-red-500 text-white rounded-full p-1 shadow hover:bg-red-600 transition"
+              onClick={() => onDelete(message._id)}
+            >
+              <FaTrash size={11} />
+            </button>
+          )}
         </div>
       </div>
-      <div className="chat-header mb-1">
-        <time className="text-xs opacity-50 ml-1">
-          {formatMessageTime(message.createdAt)}
-        </time>
-      </div>
 
-      <div className="chat-bubble flex flex-col break-words whitespace-pre-wrap overflow-wrap break-anywhere relative">
-        {message.image && (
+      {/* Avatar on right for own messages */}
+      {isOwnMessage && (
+        <div className="ml-2 flex flex-col items-end">
           <img
-            src={message.image}
-            alt="Attachment"
-            className="sm:max-w-[200px] rounded-md mb-2"
+            src={avatarUrl}
+            alt="Your avatar"
+            className="w-9 h-9 rounded-full border border-gray-200 shadow object-cover"
+            loading="lazy"
           />
-        )}
-        {message.text && <p>{message.text}</p>}
-
-        {isOwnMessage && hovered && (
-          <button
-            className="absolute -top-2 -right-2 bg-white p-1 rounded-full text-red-500 hover:text-red-700 shadow"
-            onClick={() => onDelete(message._id)}
-          >
-            <FaTrash size={12} />
-          </button>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -3,30 +3,30 @@ import { useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useChatStore } from '../store/useChatStore';
 
-const MessageInput = () => {
+const MessageInput = ({ mode = 'private' }) => {
   const [text, setText] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
-  const fileInputRef = useRef(null);
-  const { sendMessage } = useChatStore();
   const [selectedImage, setSelectedImage] = useState(null);
   const [isSending, setIsSending] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const { sendMessage, sendGlobalMessage } = useChatStore();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (!file.type?.startsWith('image/')) {
+    if (!file || !file.type?.startsWith('image/')) {
       toast.error('Please select an image file');
       return;
     }
     setSelectedImage(file);
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result); //for preview only
-    };
+    reader.onloadend = () => setImagePreview(reader.result);
     reader.readAsDataURL(file);
   };
 
   const removeImage = () => {
     setImagePreview(null);
+    setSelectedImage(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -36,18 +36,21 @@ const MessageInput = () => {
 
     const formData = new FormData();
     formData.append('text', text.trim());
-    if (selectedImage) {
-      formData.append('image', selectedImage);
-    }
+    if (selectedImage) formData.append('image', selectedImage);
 
     try {
       setIsSending(true);
-      await sendMessage(formData);
-      // Clear form
+
+      // Call correct function based on mode
+      if (mode === 'global') {
+        await sendGlobalMessage(formData);
+      } else {
+        await sendMessage(formData);
+      }
+
+      // Reset form
       setText('');
-      setImagePreview(null);
-      setSelectedImage(null);
-      if (fileInputRef.current) fileInputRef.current.value = '';
+      removeImage();
     } catch (error) {
       console.error('Failed to send message:', error);
     } finally {
@@ -67,8 +70,7 @@ const MessageInput = () => {
             />
             <button
               onClick={removeImage}
-              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300
-              flex items-center justify-center"
+              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-base-300 flex items-center justify-center"
               type="button"
             >
               <X className="size-3" />
@@ -81,7 +83,9 @@ const MessageInput = () => {
           <input
             type="text"
             className="w-full input input-bordered rounded-lg input-sm sm:input-md"
-            placeholder="Type a message..."
+            placeholder={
+              mode === 'global' ? 'Message everyone...' : 'Type a message...'
+            }
             value={text}
             onChange={(e) => setText(e.target.value)}
             disabled={isSending}
@@ -94,11 +98,11 @@ const MessageInput = () => {
             onChange={handleImageChange}
             disabled={isSending}
           />
-
           <button
             type="button"
-            className={`hidden sm:flex btn btn-circle
-                     ${imagePreview ? 'text-emerald-500' : 'text-zinc-400'}`}
+            className={`hidden sm:flex btn btn-circle ${
+              imagePreview ? 'text-emerald-500' : 'text-zinc-400'
+            }`}
             onClick={() => fileInputRef.current?.click()}
             disabled={isSending}
           >

@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar.jsx';
+import GlobalChatPage from './pages/GlobalChatPage.jsx';
 import HomeChatPage from './pages/HomeChatPage.jsx';
 import HomePage from './pages/HomePage.jsx';
 import LogInPage from './pages/LogInPage.jsx';
@@ -13,8 +14,8 @@ import { useAuthStore } from './store/useAuthStore.js';
 import { useThemeStore } from './store/useThemeStore.js';
 
 const App = () => {
-  const { isCheckingAuth, authUser, checkAuth, onlineUsers } = useAuthStore();
-  console.log('Online Users:', onlineUsers);
+  const { isCheckingAuth, authUser, checkAuth } = useAuthStore();
+
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
@@ -41,6 +42,10 @@ const App = () => {
           element={authUser ? <HomeChatPage /> : <LogInPage />}
         />
         <Route
+          path="/global-chat"
+          element={authUser ? <GlobalChatPage /> : <Navigate to="/login" />}
+        />
+        <Route
           path="/signup"
           element={!authUser ? <SignUpPage /> : <Navigate to={'/'} />}
         />
@@ -53,6 +58,7 @@ const App = () => {
           path="/profile"
           element={authUser ? <ProfilePage /> : <Navigate to={'/login'} />}
         />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Toaster />
     </div>

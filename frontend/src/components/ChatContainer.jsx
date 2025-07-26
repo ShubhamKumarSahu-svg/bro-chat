@@ -62,8 +62,8 @@ const ChatContainer = () => {
             onDelete={deleteMessage}
             profilePic={
               message.senderId === authUser._id
-                ? authUser.profilePic
-                : selectedUser.profilePic
+                ? authUser.profilePic?.secure_url || '/avatar.png'
+                : selectedUser.profilePic?.secure_url || '/avatar.png'
             }
           />
         ))}
